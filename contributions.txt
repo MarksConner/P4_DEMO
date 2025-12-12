@@ -1,3 +1,4 @@
 Byron Billy: All of frontend elements. This includes: everythig under "src" in the frontend folder such as components like the buttons, toast etc
 most of the pages, all of the types, the css file (plan to completely replace this), and the main tsx file that handles connecting all our UI
 elements. Did most of the UI design. 
+Edgar Rodriguez-Angulo: Modified some of the files Conner made: backend/app.py, backend/services/llm_agent.py and backend/services/scheduler.py. In llm_agent.py, I modified the system prompt to allow for more robust behaviors and modified the ask_llm function to be more robust. In scheduler.py, I made the find_slot function. In app.py, I added the calendar context variable that'll serve as a temporary hard constraint, and added window-based scheduling starting at line 57.
