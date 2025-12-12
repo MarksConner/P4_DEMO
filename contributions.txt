@@ -1,0 +1,3 @@
+Byron Billy: All of frontend elements. This includes: everythig under "src" in the frontend folder such as components like the buttons, toast etc
+most of the pages, all of the types, the css file (plan to completely replace this), and the main tsx file that handles connecting all our UI
+elements. Did most of the UI design. 
