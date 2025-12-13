@@ -24,7 +24,7 @@ export const CreateCalendar = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-
+// FormEvent HTML for form submissions followed https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/forms_and_events/., not completely sourced
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -34,7 +34,7 @@ export const CreateCalendar = () => {
         setError("User not logged in");
       return;
     }
-
+//Form Data for api submissions that require a file submission.
     const formData = new FormData();
     formData.append("user_id", userID!);
     formData.append("calendar_name", calendarName);
