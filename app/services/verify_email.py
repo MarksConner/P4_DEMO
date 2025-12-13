@@ -1,7 +1,10 @@
+
 import smtplib
 from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
 from app.config import Config
 from uuid import UUID
+
+#---Externaly sourced https://www.youtube.com/watch?v=nodSaVS4BMY---
 mail_config = ConnectionConfig(
     MAIL_USERNAME = Config.MAIL_USERNAME,
     MAIL_PASSWORD = Config.MAIL_PASSWORD,
@@ -14,6 +17,7 @@ mail_config = ConnectionConfig(
     USE_CREDENTIALS = True,
     VALIDATE_CERTS = True
 )
+#--- ---
 
 mail = FastMail(config = mail_config)
 
