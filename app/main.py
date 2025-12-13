@@ -15,7 +15,7 @@ app.include_router(chat_api.router)
 app.include_router(messages_api.router)
 
 from fastapi.middleware.cors import CORSMiddleware
-
+#---Externally sourced from https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -23,4 +23,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+#--- ---
 
