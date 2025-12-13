@@ -14,6 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 #Mail Settings to send verification emails
 BASE_DIR = Path(__file__).resolve().parent
+#--- Externally sourced from https://www.youtube.com/watch?v=nodSaVS4BMY?t=6m50s
 class Settings(BaseSettings):
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
     TEMPLATE_FOLDER: Path = Path(BASE_DIR, 'templates')
     model_config = SettingsConfigDict(env_file =".env",extra="ignore")
 Config = Settings()
-
+#--- ---
 #Current User
 def get_db():
     db = SessionLocal()
@@ -37,7 +38,7 @@ def get_db():
     finally:
         db.close()
 
-
+#---Externally Sourced from https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/---
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db),):
     
     try:
@@ -55,5 +56,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = get_user_by_email(db, email)
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
+#--- ---
 
     return user
