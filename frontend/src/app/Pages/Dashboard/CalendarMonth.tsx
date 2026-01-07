@@ -1,3 +1,7 @@
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import type { SxProps, Theme } from "@mui/material/styles";
+
 export interface CalendarEvent {
   id: string;
   date: string; // "YYYY-MM-DD"
@@ -57,52 +61,103 @@ export function CalendarMonth({ year, month, events = [] }: CalendarMonthProps) 
   });
 
   return (
-    <div className="calendar-month">
-      <div className="calendar-month-header">
-        <div className="calendar-month-title">{monthLabel}</div>
-      </div>
+    <Box
+      sx={{
+        bgcolor: "background.paper",
+        borderRadius: 1.5,
+        p: 1.5,
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 1,
+        }}
+      >
+        <Typography sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+          {monthLabel}
+        </Typography>
+      </Box>
 
-      <div className="calendar-month-weekdays">
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          fontSize: "0.6875rem",
+          color: "text.secondary",
+          mb: 0.5,
+        }}
+      >
         {dayNames.map((name) => (
-          <div key={name} className="calendar-month-weekday">
+          <Box key={name} sx={{ textAlign: "center", py: 0.25 }}>
             {name}
-          </div>
+          </Box>
         ))}
-      </div>
+      </Box>
 
-      <div className="calendar-month-grid">
-        {cells.map((cell) => (
-          <div
-            key={cell.index}
-            className={[
-              "calendar-month-cell",
-              !cell.inCurrentMonth ? "calendar-month-cell-outside" : "",
-              cell.isToday ? "calendar-month-cell-today" : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            {cell.dayNumber !== null && (
-              <>
-                <div className="calendar-month-cell-date">
-                  {cell.dayNumber}
-                </div>
-                <div className="calendar-month-events">
-                  {cell.events.map((evt) => (
-                    <div
-                      key={evt.id}
-                      className="calendar-month-event"
-                      title={evt.title}
-                    >
-                      • {evt.title}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          gap: 0.5,
+        }}
+      >
+        {cells.map((cell) => {
+          const cellSx: SxProps<Theme> = {
+            minHeight: 72,
+            borderRadius: 1,
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            px: 0.75,
+            py: 0.5,
+            fontSize: "0.6875rem",
+            display: "flex",
+            flexDirection: "column",
+          };
+          const outsideSx: SxProps<Theme> = cell.inCurrentMonth
+            ? {}
+            : { bgcolor: "grey.50", color: "text.secondary" };
+          const todaySx: SxProps<Theme> = cell.isToday
+            ? {
+                borderColor: "primary.main",
+                boxShadow: (theme) =>
+                  `0 0 0 1px ${theme.palette.primary.main}`,
+              }
+            : {};
+          const mergedSx = [cellSx, outsideSx, todaySx];
+
+          return (
+            <Box key={cell.index} sx={mergedSx}>
+              {cell.dayNumber !== null && (
+                <>
+                  <Box sx={{ fontWeight: 600, mb: 0.25 }}>
+                    {cell.dayNumber}
+                  </Box>
+                  <Box sx={{ mt: 0.25 }}>
+                    {cell.events.map((evt) => (
+                      <Box
+                        key={evt.id}
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          color: "text.secondary",
+                        }}
+                        title={evt.title}
+                      >
+                        • {evt.title}
+                      </Box>
+                    ))}
+                  </Box>
+                </>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
   );
 }

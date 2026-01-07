@@ -12,6 +12,10 @@ import { Input } from "../../design_system/components/ui/Input";
 import { useState, useEffect } from "react";
 import type { DailyTimelineItem } from "../../Types/Calendar";
 import { fetchTodayTimeline } from "../../api/Today";
+import Box from "@mui/material/Box";
+import ButtonBase from "@mui/material/ButtonBase";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 export const TodaysPlanPage = () => {
   const navigate = useNavigate();
@@ -65,19 +69,29 @@ export const TodaysPlanPage = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl">
+    <Stack spacing={2} sx={{ maxWidth: 672 }}>
       {/* Header row */}
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold">Today&apos;s plan</h1>
-          <p className="text-sm text-muted">
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Today&apos;s plan
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             A timeline of your day with AI-powered insights.
-          </p>
-        </div>
+          </Typography>
+        </Box>
         <Button size="sm" onClick={handleOpenAdd}>
           Add task
         </Button>
-      </div>
+      </Box>
 
       {/* AI insight banner */}
       <Banner
@@ -89,38 +103,51 @@ export const TodaysPlanPage = () => {
       {/* Timeline card */}
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-semibold">Timeline</h2>
+          <Typography variant="h6" fontWeight={600}>
+            Timeline
+          </Typography>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {isLoading && (
-            <p className="text-sm text-muted">Loading today&apos;s plan…</p>
-          )}
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-          {!isLoading && !error && items.length === 0 && (
-            <p className="text-sm text-muted">
-              No events yet. Use &quot;Add task&quot; to start planning your day.
-            </p>
-          )}
-          {!isLoading &&
-            !error &&
-            items.map((item, index) => (
-              <button
-                key={item.id}
-                type="button"
-                className="w-full text-left"
-                onClick={() => navigate(`/events/${item.id}`)}
-              >
-                <TimelineRow
-                  time={item.startTime}
-                  title={item.title}
-                  description={item.description}
-                  status={item.status}
-                  className={index !== items.length - 1 ? "pb-2" : ""}
-                />
-              </button>
-            ))}
+        <CardContent>
+          <Stack spacing={1}>
+            {isLoading && (
+              <Typography variant="body2" color="text.secondary">
+                Loading today&apos;s plan…
+              </Typography>
+            )}
+            {error && (
+              <Typography variant="body2" color="error">
+                {error}
+              </Typography>
+            )}
+            {!isLoading && !error && items.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No events yet. Use &quot;Add task&quot; to start planning your day.
+              </Typography>
+            )}
+            {!isLoading &&
+              !error &&
+              items.map((item) => (
+                <ButtonBase
+                  key={item.id}
+                  type="button"
+                  disableRipple
+                  onClick={() => navigate(`/events/${item.id}`)}
+                  sx={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    borderRadius: 1,
+                  }}
+                >
+                  <TimelineRow
+                    time={item.startTime}
+                    title={item.title}
+                    description={item.description}
+                    status={item.status}
+                  />
+                </ButtonBase>
+              ))}
+          </Stack>
         </CardContent>
       </Card>
 
@@ -138,7 +165,7 @@ export const TodaysPlanPage = () => {
           </>
         }
       >
-        <div className="space-y-3">
+        <Stack spacing={1.5}>
           <Input
             label="Title"
             placeholder="e.g., Deep work – ML project"
@@ -157,8 +184,8 @@ export const TodaysPlanPage = () => {
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
           />
-        </div>
+        </Stack>
       </Modal>
-    </div>
+    </Stack>
   );
 };

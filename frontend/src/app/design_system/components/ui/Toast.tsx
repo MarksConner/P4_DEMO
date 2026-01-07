@@ -1,9 +1,15 @@
-import type { HTMLAttributes, JSX } from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import type { JSX } from "react";
+import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import type { PaperProps } from "@mui/material/Paper";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 export type ToastVariant = 'success' | 'error' | 'info';
 
-export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
+export interface ToastProps extends Omit<PaperProps, "children"> {
   variant?: ToastVariant;
   title: string;
   description?: string;
@@ -11,13 +17,14 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const icons: Record<ToastVariant, JSX.Element> = {
-  success: (
-    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-  ),
-  error: (
-    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-  ),
-  info: <Info className="w-5 h-5 text-primary" />,
+  success: <CheckCircle2 size={20} />,
+  error: <AlertCircle size={20} />,
+  info: <Info size={20} />,
+};
+const iconColors: Record<ToastVariant, (theme: Theme) => string> = {
+  success: (theme) => theme.palette.success.main,
+  error: (theme) => theme.palette.error.main,
+  info: (theme) => theme.palette.primary.main,
 };
 
 export const Toast = ({
@@ -26,31 +33,54 @@ export const Toast = ({
   description,
   onClose,
   className = "",
+  sx,
   ...props
 }: ToastProps): JSX.Element => {
+  const baseSx: SxProps<Theme> = {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 1.5,
+    p: 2,
+    bgcolor: "background.paper",
+    borderColor: "divider",
+    borderRadius: 2,
+    boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)",
+    maxWidth: 384,
+  };
+  const mergedSx = (Array.isArray(sx) ? [baseSx, ...sx] : [baseSx, sx]).filter(
+    Boolean
+  ) as SxProps<Theme>;
+
   return (
-    <div
-      className={`flex items-start gap-3 p-4 bg-card border border-border rounded-lg shadow-card max-w-sm ${className}`}
+    <Paper
       {...props}
+      className={className}
+      variant="outlined"
+      sx={mergedSx}
     >
-      <div className="flex-shrink-0 mt-0.5">{icons[variant]}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-body text-card-foreground">{title}</p>
+      <Box sx={{ flexShrink: 0, mt: 0.5, color: iconColors[variant] }}>
+        {icons[variant]}
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" color="text.primary">
+          {title}
+        </Typography>
         {description && (
-          <p className="text-caption text-muted-foreground mt-1">
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
             {description}
-          </p>
+          </Typography>
         )}
-      </div>
+      </Box>
       {onClose && (
-        <button
+        <IconButton
+          size="small"
           onClick={onClose}
-          className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Close"
+          sx={{ color: "text.secondary" }}
         >
-          <X className="w-4 h-4" />
-        </button>
+          <X size={16} />
+        </IconButton>
       )}
-    </div>
+    </Paper>
   );
 };

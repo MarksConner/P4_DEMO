@@ -1,54 +1,79 @@
 import { forwardRef } from "react";
-import type { ButtonHTMLAttributes } from "react";
+import MuiButton from "@mui/material/Button";
+import type { ButtonProps as MuiButtonProps } from "@mui/material/Button";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends Omit<MuiButtonProps, "variant" | "size" | "color"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
 }
 
-const baseStyles =
-  "inline-flex items-center justify-center gap-2 rounded-lg transition-all focus:outline-none focus:shadow-focus disabled:opacity-50 disabled:cursor-not-allowed";
-
-const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground hover:opacity-90",
-  secondary:
-    "bg-secondary text-secondary-foreground hover:bg-accent hover:text-foreground",
-  ghost: "bg-transparent hover:bg-accent text-foreground",
+const sizeMap: Record<ButtonSize, MuiButtonProps["size"]> = {
+  sm: "small",
+  md: "medium",
+  lg: "large",
 };
 
-const sizeStyles: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 py-1 text-xs",
-  md: "h-10 px-4 py-2 text-sm",
-  lg: "h-12 px-6 py-3 text-sm",
+const sizeSx: Record<ButtonSize, SxProps<Theme>> = {
+  sm: { minHeight: 32, px: 1.5, py: 0.5, fontSize: "0.75rem" },
+  md: { minHeight: 40, px: 2, py: 1, fontSize: "0.875rem" },
+  lg: { minHeight: 48, px: 3, py: 1.5, fontSize: "0.875rem" },
+};
+
+const variantMap: Record<
+  ButtonVariant,
+  {
+    variant: MuiButtonProps["variant"];
+    color: MuiButtonProps["color"];
+    sx?: SxProps<Theme>;
+  }
+> = {
+  primary: { variant: "contained", color: "primary" },
+  secondary: {
+    variant: "outlined",
+    color: "inherit",
+    sx: {
+      borderColor: "divider",
+      color: "text.primary",
+      "&:hover": {
+        borderColor: "text.primary",
+        backgroundColor: "action.hover",
+      },
+    },
+  },
+  ghost: {
+    variant: "text",
+    color: "inherit",
+    sx: {
+      color: "text.primary",
+      "&:hover": {
+        backgroundColor: "action.hover",
+      },
+    },
+  },
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = "primary",
-      size = "md",
-      className = "",
-      children,
-      ...props
-    },
-    ref
-  ) => {
-    const classes = [
-      baseStyles,
-      variantStyles[variant],
-      sizeStyles[size],
-      className,
-    ]
-      .filter(Boolean)
-      .join(" ");
+  ({ variant = "primary", size = "md", sx, ...props }, ref) => {
+    const mapped = variantMap[variant];
+    const baseSx = [sizeSx[size], mapped.sx];
+    const mergedSx = (
+      Array.isArray(sx) ? [...baseSx, ...sx] : [...baseSx, sx]
+    ).filter(Boolean) as SxProps<Theme>;
 
     return (
-      <button ref={ref} className={classes} {...props}>
-        {children}
-      </button>
+      <MuiButton
+        ref={ref}
+        variant={mapped.variant}
+        color={mapped.color}
+        size={sizeMap[size]}
+        sx={mergedSx}
+        {...props}
+      />
     );
   }
 );

@@ -3,11 +3,13 @@ import {
   CardHeader,
   CardContent,
 } from "../../design_system/components/ui/Card";
-import { Badge } from "../../design_system/components/ui/Badge";
 import { useState, useEffect } from "react";
 import { CalendarMonth } from "./CalendarMonth";
 import type { CalendarEvent } from "../../Types/Calendar";
 import { fetchMonthEvents } from "../../api/calendar";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 export const DashboardPage = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -30,27 +32,35 @@ export const DashboardPage = () => {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-      </div>
+    <Stack spacing={2}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="h5" fontWeight={600}>
+          Dashboard
+        </Typography>
+      </Box>
 
       <Card>
         <CardHeader>
-          <h2 className="text-h2">Calendar overview</h2>
+          <Typography variant="h6" fontWeight={600}>
+            Calendar overview
+          </Typography>
         </CardHeader>
         <CardContent>
           {isLoading && (
-            <p className="text-body text-muted">Loading calendar…</p>
+            <Typography variant="body2" color="text.secondary">
+              Loading calendar…
+            </Typography>
           )}
           {error && (
-            <p className="text-body text-destructive">{error}</p>
+            <Typography variant="body2" color="error">
+              {error}
+            </Typography>
           )}
           {!isLoading && !error && (
             <CalendarMonth year={2025} month={2} events={events} />
           )}
         </CardContent>
       </Card>
-    </div>
+    </Stack>
   );
 };

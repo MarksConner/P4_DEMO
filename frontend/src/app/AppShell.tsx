@@ -1,4 +1,14 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  NavLink,
+  useMatch,
+  useResolvedPath,
+  useNavigate,
+} from "react-router-dom";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import Typography from "@mui/material/Typography";
 import { Button } from "./design_system/components/ui/Button";
 import { SidePanel } from "./design_system/components/ui/SidePanel";
 import { Banner } from "./design_system/components/ui/Banner";
@@ -9,55 +19,84 @@ export function AppShell() {
   const navigate = useNavigate();
 
   return (
-    <div className="app-root">
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
       {/* Left sidebar */}
-      <aside className="app-sidebar">
-        <div className="sidebar-header">AI Calendar</div>
+      <Box
+        component="aside"
+        sx={{
+          width: 220,
+          borderRight: 1,
+          borderColor: "divider",
+          px: 1.5,
+          py: 2,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+          AI Calendar
+        </Typography>
 
-        <nav className="sidebar-nav">
+        <List
+          component="nav"
+          disablePadding
+          sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+        >
           <NavItem to="/">Dashboard</NavItem>
           <NavItem to="/today">Today&apos;s plan</NavItem>
           <NavItem to="/proposals">Proposals</NavItem>
-        </nav>
-        
-      </aside>
+        </List>
+      </Box>
 
       {/* Main column */}
-      <div className="app-main">
-        <header className="app-topbar">
-          <div className="app-topbar-left">Welcome back</div>
-          <div className="app-topbar-right">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => navigate("/login")}
-            >
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <Box
+          component="header"
+          sx={{
+            height: 56,
+            borderBottom: 1,
+            borderColor: "divider",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+          }}
+        >
+          <Typography variant="body2">Welcome back</Typography>
+          <Button size="sm" variant="secondary" onClick={() => navigate("/login")}>
             Log out
           </Button>
-          </div>
-        </header>
+        </Box>
 
-        <div className="app-content">
-          <main className="app-main-content">
-            <div className="app-toast-area">
+        <Box sx={{ flex: 1, display: "flex", minHeight: 0 }}>
+          <Box component="main" sx={{ flex: 1, p: 2, overflowY: "auto" }}>
+            <Box sx={{ mb: 2, maxWidth: 480 }}>
               <Toast
                 variant="info"
                 title="Tip"
                 description="Use Today’s plan to see a detailed timeline for your day."
               />
-            </div>
+            </Box>
             <Outlet />
-          </main>
+          </Box>
 
-          <aside className="app-right-panel">
+          <Box
+            component="aside"
+            sx={{
+              width: 280,
+              borderLeft: 1,
+              borderColor: "divider",
+              p: 2,
+            }}
+          >
             <Banner
               variant="success"
               title="AI insights"
               message="Leave-by time suggestions and conflict warnings will appear here."
             />
-          </aside>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
 
       <SidePanel
         isOpen={false}
@@ -65,11 +104,11 @@ export function AppShell() {
         title="Details"
         side="right"
       >
-        <p className="text-body text-muted">
+        <Typography variant="body2" color="text.secondary">
           You can later use this for a slide-out details or assistant panel.
-        </p>
+        </Typography>
       </SidePanel>
-    </div>
+    </Box>
   );
 }
 
@@ -80,15 +119,35 @@ function NavItem({
   to: string;
   children: React.ReactNode;
 }) {
+  const resolved = useResolvedPath(to);
+  const match = useMatch({ path: resolved.pathname, end: true });
+
   return (
-    <NavLink
+    <ListItemButton
+      component={NavLink}
       to={to}
-      end
-      className={({ isActive }) =>
-        "nav-item" + (isActive ? " nav-item-active" : "")
-      }
+      selected={Boolean(match)}
+      disableRipple
+      sx={{
+        borderRadius: 1,
+        px: 1.25,
+        py: 1,
+        fontSize: "0.875rem",
+        color: "text.secondary",
+        "&.Mui-selected": {
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
+        },
+        "&.Mui-selected:hover": {
+          bgcolor: "primary.main",
+        },
+        "&:hover": {
+          bgcolor: "background.paper",
+          color: "text.primary",
+        },
+      }}
     >
       {children}
-    </NavLink>
+    </ListItemButton>
   );
 }

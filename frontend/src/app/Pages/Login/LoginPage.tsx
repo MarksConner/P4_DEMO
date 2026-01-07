@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Link from "@mui/material/Link";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import {
   Card,
   CardHeader,
@@ -48,60 +54,97 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="login-root">
-      <Card variant="elevated" className="login-card">
-        <CardHeader>
-          <h1 className="text-2xl font-semibold text-center">
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "background.default",
+        color: "text.primary",
+        px: 2,
+      }}
+    >
+      <Card variant="elevated" sx={{ width: "100%", maxWidth: 400 }}>
+        <CardHeader sx={{ textAlign: "center" }}>
+          <Typography variant="h5" fontWeight={600}>
             Welcome to our AI-Agent Scheduler
-          </h1>
+          </Typography>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+        <Box component="form" onSubmit={handleSubmit}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Input
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
 
-            {error && (
-              <p className="text-body text-destructive" style={{ marginTop: 8 }}>
-                {error}
-              </p>
-            )}
+              {error && (
+                <Typography variant="body2" color="error">
+                  {error}
+                </Typography>
+              )}
+            </Stack>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <div className="flex items-center justify-between text-xs text-muted w-full">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="h-3 w-3 rounded border border-border"
-                />
-                <span>Remember me</span>
-              </label>
-              <button type="button" className="text-primary hover:underline">
+          <CardFooter
+            sx={{
+              flexDirection: "column",
+              alignItems: "stretch",
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                gap: 2,
+              }}
+            >
+              <FormControlLabel
+                control={<Checkbox size="small" />}
+                label="Remember me"
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: "0.75rem",
+                    color: "text.secondary",
+                  },
+                }}
+              />
+              <Link
+                component="button"
+                type="button"
+                underline="hover"
+                color="primary"
+                variant="caption"
+                sx={{ fontWeight: 500 }}
+              >
                 Forgot password?
-              </button>
-            </div>
+              </Link>
+            </Box>
 
-            <Button className="w-full mt-1" type="submit" disabled={isLoading}>
+            <Button fullWidth type="submit" disabled={isLoading}>
               {isLoading ? "Logging in…" : "Log in"}
             </Button>
           </CardFooter>
-        </form>
+        </Box>
       </Card>
-    </div>
+    </Box>
   );
 };
