@@ -8,10 +8,6 @@ from .event import Event
 from .errors import ConflictError
 from .time_utils import event_overlaps
 
-
-def overlap(ev1: Event, ev2: Event) -> bool:
-    return ev1.start < ev2.end and ev2.start < ev1.end
-
 class Schedule:
     def __init__ (self):
         self._events: list[Event] = []
@@ -36,7 +32,7 @@ class Schedule:
         flexible: bool = False,
         travel_time_min: int = 0,
         allow_conflicts: bool = False,
-    ):
+    ) -> Event:
         # here I am just setting the end time based on the duration
         end = start + timedelta(minutes = duration_minutes)
         
@@ -54,7 +50,7 @@ class Schedule:
         # I am checking for conflicts because almost all events should not overlap
         # I raise an error if it conflicts unless allow_conflicts is set to true
         if not allow_conflicts:
-            conflicts = [evnt for evnt in self._events if overlap(evnt, new_event)]
+            conflicts = [evnt for evnt in self._events if event_overlaps(evnt, new_event)]
             if conflicts:
                 raise ConflictError(new_event = new_event, conflicts = conflicts)
             
@@ -83,7 +79,7 @@ class Schedule:
             for other in self._events:
                 if other.id == event_id:
                     continue
-                if overlap(other, moved):
+                if event_overlaps(other, moved):
                     raise ConflictError(new_event = moved, conflicts = [other])
         
         self._events = [evnt if evnt.id != event_id else moved for evnt in self._events]
