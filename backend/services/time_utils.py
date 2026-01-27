@@ -22,7 +22,7 @@ def is_free(start: datetime, end: datetime, events: Iterable[Event]) -> bool:
 
 # in this function, im returning a list of tuples represinting the start and end times of free slots
 # I made the windows 15 minutes and increment by that time
-def free_slot(
+def free_slots(
         events: List[Event],
         window_start: datetime,
         window_end: datetime,
