@@ -11,14 +11,16 @@ import { Modal } from "../../design_system/components/ui/Modal";
 import { Input } from "../../design_system/components/ui/Input";
 import { useState, useEffect } from "react";
 import type { DailyTimelineItem } from "../../Types/Calendar";
-import { fetchTodayTimeline } from "../../api/Today";
+import { fetchDayTimeline } from "../../api/Today";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useCalendar } from "../../contexts/CalendarContext";
 
 export const TodaysPlanPage = () => {
   const navigate = useNavigate();
+  const { selectedDate } = useCalendar();
 
   const [items, setItems] = useState<DailyTimelineItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,16 +32,26 @@ export const TodaysPlanPage = () => {
   const [newDescription, setNewDescription] = useState("");
 
   useEffect(() => {
-    fetchTodayTimeline()
+    setIsLoading(true);
+    setError(null);
+    fetchDayTimeline(selectedDate)
       .then((data) => {
         setItems(data);
         setIsLoading(false);
       })
       .catch(() => {
-        setError("Could not load today\u2019s plan.");
+        setError("Could not load events for this day.");
         setIsLoading(false);
       });
-  }, []);
+  }, [selectedDate]);
+
+  const dateLabel = selectedDate.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const isToday =
+    selectedDate.toDateString() === new Date().toDateString();
 
   const handleOpenAdd = () => {
     setNewTitle("");
@@ -82,10 +94,12 @@ export const TodaysPlanPage = () => {
       >
         <Box>
           <Typography variant="h5" fontWeight={600}>
-            Today&apos;s plan
+            {isToday ? "Today" : dateLabel}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            A timeline of your day with AI-powered insights.
+            {isToday
+              ? "A timeline of your day with AI-powered insights."
+              : `Events scheduled for ${dateLabel}.`}
           </Typography>
         </Box>
         <Button size="sm" onClick={handleOpenAdd}>
@@ -111,7 +125,7 @@ export const TodaysPlanPage = () => {
           <Stack spacing={1}>
             {isLoading && (
               <Typography variant="body2" color="text.secondary">
-                Loading today&apos;s plan…
+                Loading events…
               </Typography>
             )}
             {error && (

@@ -134,6 +134,7 @@ export const LoginPage = () => {
                 color="primary"
                 variant="caption"
                 sx={{ fontWeight: 500 }}
+                onClick={() => navigate("/recover-account")}
               >
                 Forgot password?
               </Link>
@@ -142,6 +143,18 @@ export const LoginPage = () => {
             <Button fullWidth type="submit" disabled={isLoading}>
               {isLoading ? "Logging in…" : "Log in"}
             </Button>
+            <Typography variant="caption" color="text.secondary" align="center">
+              Don&apos;t have an account?{" "}
+              <Link
+                component="button"
+                type="button"
+                underline="hover"
+                color="primary"
+                onClick={() => navigate("/create-user")}
+              >
+                Create one
+              </Link>
+            </Typography>
           </CardFooter>
         </Box>
       </Card>
