@@ -1,8 +1,16 @@
-import type { HTMLAttributes, JSX } from 'react';
-import { AlertCircle, Info, CheckCircle2, X } from 'lucide-react';
+import type { JSX } from "react";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import type { AlertColor, AlertProps } from "@mui/material/Alert";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
+import { AlertCircle, Info, CheckCircle2, X } from "lucide-react";
 
 export type BannerVariant = 'info' | 'success' | 'warning' | 'error';
-export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
+export interface BannerProps
+  extends Omit<AlertProps, "severity" | "variant" | "children" | "icon" | "onClose"> {
   variant?: BannerVariant;
   title?: string;
   message: string;
@@ -10,64 +18,74 @@ export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   onClose?: () => void;
 }
 
-const variantStyles: Record<BannerVariant, string> = {
-  info: 'border-blue-200 bg-blue-50 text-blue-900',
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-  warning: 'border-amber-200 bg-amber-50 text-amber-900',
-  error: 'border-red-200 bg-red-50 text-red-900',
-};
-
-const iconStyles: Record<BannerVariant, string> = {
-  info: 'text-blue-500',
-  success: 'text-emerald-500',
-  warning: 'text-amber-500',
-  error: 'text-red-500',
+const severityMap: Record<BannerVariant, AlertColor> = {
+  info: "info",
+  success: "success",
+  warning: "warning",
+  error: "error",
 };
 
 const icons: Record<BannerVariant, JSX.Element> = {
-  info: <Info className="h-4 w-4" />,
-  success: <CheckCircle2 className="h-4 w-4" />,
-  warning: <AlertCircle className="h-4 w-4" />,
-  error: <AlertCircle className="h-4 w-4" />,
+  info: <Info size={16} />,
+  success: <CheckCircle2 size={16} />,
+  warning: <AlertCircle size={16} />,
+  error: <AlertCircle size={16} />,
 };
 
 export function Banner({
-  variant = 'info',
+  variant = "info",
   title,
   message,
   dismissible = false,
   onClose,
-  className = '',
+  className = "",
+  sx,
   ...props
 }: BannerProps) {
-  const baseClasses =
-    'relative flex items-start gap-3 rounded-md border px-4 py-3 text-sm';
-
-  const classes = [baseClasses, variantStyles[variant], className]
-    .filter(Boolean)
-    .join(' ');
-
-  const iconClass = ['mt-0.5 flex-shrink-0', iconStyles[variant]]
-    .filter(Boolean)
-    .join(' ');
+  const severity = severityMap[variant];
+  const baseSx: SxProps<Theme> = {
+    borderRadius: 1,
+    px: 2,
+    py: 1.5,
+    alignItems: "flex-start",
+    borderColor: (theme) => theme.palette[severity].main,
+    backgroundColor: (theme) => alpha(theme.palette[severity].main, 0.08),
+    color: (theme) => theme.palette[severity].dark,
+    "& .MuiAlert-message": {
+      padding: 0,
+    },
+    "& .MuiAlert-icon": {
+      mt: "2px",
+      color: (theme) => theme.palette[severity].main,
+    },
+  };
+  const mergedSx = (Array.isArray(sx) ? [baseSx, ...sx] : [baseSx, sx]).filter(
+    Boolean
+  ) as SxProps<Theme>;
 
   return (
-    <div className={classes} role="status" {...props}>
-      <span className={iconClass}>{icons[variant]}</span>
-      <div className="flex-1">
-        {title && <div className="font-medium mb-0.5">{title}</div>}
-        <p className="text-sm leading-snug">{message}</p>
-      </div>
-      {dismissible && (
-        <button
-          type="button"
-          aria-label="Dismiss"
-          onClick={onClose}
-          className="ml-3 inline-flex h-5 w-5 items-center justify-center rounded-full border border-current/30 text-current/70 hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      )}
-    </div>
+    <Alert
+      {...props}
+      className={className}
+      severity={severity}
+      variant="outlined"
+      icon={icons[variant]}
+      sx={mergedSx}
+      action={
+        dismissible ? (
+          <IconButton
+            size="small"
+            onClick={onClose}
+            aria-label="Dismiss"
+            sx={{ color: "inherit" }}
+          >
+            <X size={14} />
+          </IconButton>
+        ) : null
+      }
+    >
+      {title && <AlertTitle sx={{ mb: 0.5, fontWeight: 600 }}>{title}</AlertTitle>}
+      <Box sx={{ fontSize: "0.875rem", lineHeight: 1.4 }}>{message}</Box>
+    </Alert>
   );
 }

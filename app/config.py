@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.services.user_service import get_user_by_email
 from app.services.user_service import SECRET_KEY, ALGORITHM
+import bcrypt
+import psycopg2
+
 
 #Create auth token on login, We dont use this yet but it's here for better security later on
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
@@ -57,3 +60,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+#Password Hashing
+
+def hash_password(password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_password.decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+

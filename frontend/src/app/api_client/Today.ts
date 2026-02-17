@@ -26,7 +26,7 @@ const MOCK_TODAY_ITEMS: DailyTimelineItem[] = [
   },
 ];
 
-export async function fetchTodayTimeline(): Promise<DailyTimelineItem[]> {
+export async function fetchDayTimeline(_date: Date): Promise<DailyTimelineItem[]> {
   await new Promise((resolve) => setTimeout(resolve, 300)); // fake delay
   return MOCK_TODAY_ITEMS;
 }

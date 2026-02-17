@@ -1,40 +1,26 @@
-import { forwardRef } from 'react';
-import type { InputHTMLAttributes } from 'react';
+import { forwardRef } from "react";
+import TextField from "@mui/material/TextField";
+import type { TextFieldProps } from "@mui/material/TextField";
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+export interface InputProps
+  extends Omit<TextFieldProps, "variant" | "helperText" | "error"> {
   helperText?: string;
   errorText?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, helperText, errorText, className = '', ...props }, ref) => {
-    const hasError = !!errorText;
-    
+  ({ helperText, errorText, ...props }, ref) => {
+    const resolvedHelperText = errorText ?? helperText;
+
     return (
-      <div className="flex flex-col gap-2">
-        {label && (
-          <label className="text-caption text-foreground"
-            style={{ marginRight: "4px", marginBottom: "4px" }}>
-            {label}
-          </label>
-        )}
-        <input
-          ref={ref}
-          className={`h-10 w-full rounded-lg border border-input bg-input-background px-3 py-2 transition-all placeholder:text-muted-foreground focus:outline-none focus:shadow-focus ${
-            hasError ? 'border-destructive' : ''
-          } ${className}`}
-          {...props}
-        />
-        {helperText && !errorText && (
-          <span className="text-caption text-muted-foreground">{helperText}</span>
-        )}
-        {errorText && (
-          <span className="text-caption text-destructive">{errorText}</span>
-        )}
-      </div>
+      <TextField
+        {...props}
+        error={Boolean(errorText)}
+        helperText={resolvedHelperText}
+        inputRef={ref}
+      />
     );
   }
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";

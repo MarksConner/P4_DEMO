@@ -1,26 +1,66 @@
-import {Card,CardHeader,CardContent} from "../../design_system/components/ui/Card";
-import { Badge } from "../../design_system/components/ui/Badge";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+} from "../../design_system/components/ui/Card";
+import { useState, useEffect } from "react";
 import { CalendarMonth } from "./CalendarMonth";
-import type { CalendarEvent } from "./CalendarMonth";
-import { CreateCalendar } from "../CreateCalendar/CreateCalendar";
+import type { CalendarEvent } from "../../Types/Calendar";
+import { fetchMonthEvents } from "../../api_client/calendar";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 export const DashboardPage = () => {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const year = 2025;
+    const month = 2; // March, 0-based
+
+    fetchMonthEvents(year, month)
+      .then((data) => {
+        setEvents(data);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setError("Could not load calendar events.");
+        setIsLoading(false);
+      });
+  }, []);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-      </div>
+    <Stack spacing={2}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="h5" fontWeight={600}>
+          Dashboard
+        </Typography>
+      </Box>
 
-      <CardContent>
-    <CalendarMonth year={2025} month={2} events={mockEvents} />
-  </CardContent>
-    </div>
+      <Card>
+        <CardHeader>
+          <Typography variant="h6" fontWeight={600}>
+            Calendar overview
+          </Typography>
+        </CardHeader>
+        <CardContent>
+          {isLoading && (
+            <Typography variant="body2" color="text.secondary">
+              Loading calendar…
+            </Typography>
+          )}
+          {error && (
+            <Typography variant="body2" color="error">
+              {error}
+            </Typography>
+          )}
+          {!isLoading && !error && (
+            <CalendarMonth year={2025} month={2} events={events} />
+          )}
+        </CardContent>
+      </Card>
+    </Stack>
   );
 };
-const mockEvents: CalendarEvent[] = [
-  { id: "1", date: "2025-03-03", title: "Project standup" },
-  { id: "2", date: "2025-03-03", title: "Gym" },
-  { id: "3", date: "2025-03-15", title: "Dentist appointment" },
-  { id: "4", date: "2025-03-21", title: "CS 425 group meeting" },
-];

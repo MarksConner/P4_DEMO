@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy import UUID
 from uuid import UUID 
 from sqlalchemy.orm import Session
 from app.api.base_model_classes import CalendarCreate

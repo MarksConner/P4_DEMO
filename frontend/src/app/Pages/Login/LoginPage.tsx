@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Link from "@mui/material/Link";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import {
   Card,
   CardHeader,
@@ -9,112 +14,156 @@ import {
 } from "../../design_system/components/ui/Card";
 import { Button } from "../../design_system/components/ui/Button";
 import { Input } from "../../design_system/components/ui/Input";
+import LoginClient  from "../../api_client/Auth";
 
-//Declare Login page as a React functional component. This means that LoginPage is a function that returns JSX to render the login interface.
 export const LoginPage = () => {
-  const [email, SetEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    try {
-    
-      const response = await fetch("http://127.0.0.1:8000/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => null);
-        console.log("Login failed response body:", errData);
-        setSuccess(false);
-        setError(errData?.detail ?? "Login failed");
-        return;
+    setIsLoading(true);
+    try {
+      const api = new LoginClient();
+      const res = await api.login(email, password);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err?.message || "Login failed");
       }
-//If the response is correct , it parses the JSON data and updates the messages state with the retrieved messages.
-//Console logs for debugging purposes.
-      const data = await response.json();
-      console.log("JSON:", data);
+      // For now, we store the token in localStorage so other parts of the app can read it.
+      const data = await res.json();
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("user_id", data.user_id);
-      console.log("Stored user_id:", data.user_id);
-      setSuccess(true);
+      localStorage.setItem("token_type", data.token_type);
 
-//Navigate to the main dashboard page /
+      // Navigate to dashboard after successful login
       navigate("/");
-    } catch (error) {
-
-      setError("Unexpected error during login");
-      setSuccess(false);
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
+      setError(msg);
     } finally {
-      console.log("Request has finished");
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="login-root">
-      <form onSubmit={onSubmit}>
-        <Card variant="elevated" className="login-card">
-          <CardHeader>
-            <h1 className="text-2xl font-semibold text-center">
-              Welcome to our AI-Agent Scheduler
-            </h1>
-          </CardHeader>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "background.default",
+        color: "text.primary",
+        px: 2,
+      }}
+    >
+      <Card variant="elevated" sx={{ width: "100%", maxWidth: 400 }}>
+        <CardHeader sx={{ textAlign: "center" }}>
+          <Typography variant="h5" fontWeight={600}>
+            Welcome to our AI-Agent Scheduler
+          </Typography>
+        </CardHeader>
 
-          <CardContent className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              className="mt-2"
-              value={email}
-              onChange={(e) => SetEmail(e.target.value)}
-            />
+        <Box component="form" onSubmit={handleSubmit}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Input
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
 
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
-              className="mt-3"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+              {error && (
+                <Typography variant="body2" color="error">
+                  {error}
+                </Typography>
+              )}
+            </Stack>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <div className="flex items-center justify-between text-xs text-muted w-full">
-              <label className="inline-flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="h-3 w-3 rounded border border-border"
-                />
-                <span>Remember me</span>
-              </label>
-              <form action="/provide-email" method="get">
-                <button type="button" className="text-primary hover:underline" onClick ={() => navigate("/provideemail")}>
-                  Forgot password?
-                </button>
-              </form>
-            </div>
-            {error && (
-              <p className="text-sm text-red-600 text-center">
-                Errors during login, please try again. Click forgot password to recover your account.
-                <br/>
-                <span className="text-xs">{error}</span>
-              </p>
-            )}
-            <Button className="w-full mt-2">Log in</Button>
+          <CardFooter
+            sx={{
+              flexDirection: "column",
+              alignItems: "stretch",
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                gap: 2,
+              }}
+            >
+              <FormControlLabel
+                control={<Checkbox size="small" />}
+                label="Remember me"
+                sx={{
+                  m: 0,
+                  "& .MuiFormControlLabel-label": {
+                    fontSize: "0.75rem",
+                    color: "text.secondary",
+                  },
+                }}
+              />
+              <Link
+                component="button"
+                type="button"
+                underline="hover"
+                color="primary"
+                variant="caption"
+                sx={{ fontWeight: 500 }}
+                onClick={() => navigate("/recover-account")}
+              >
+                Forgot password?
+              </Link>
+            </Box>
+
+            <Button fullWidth type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in…" : "Log in"}
+            </Button>
+            <Typography variant="caption" color="text.secondary" align="center">
+              Don&apos;t have an account?{" "}
+              <Link
+                component="button"
+                type="button"
+                underline="hover"
+                color="primary"
+                onClick={() => navigate("/create-user")}
+              >
+                Create one
+              </Link>
+            </Typography>
           </CardFooter>
-        </Card>
-      </form>
-    </div>
+        </Box>
+      </Card>
+    </Box>
   );
 };

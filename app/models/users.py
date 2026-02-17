@@ -12,7 +12,9 @@ class Users(Base):
     username = Column(Text, nullable=False, unique=True)
     first_name = Column(Text, nullable=False)
     last_name = Column(Text, nullable=False)
-    password = Column(Text, nullable=False)
+
+    password_hash = Column(Text, nullable=False, default='')
+
     created_at = Column(TIMESTAMP, server_default=func.now())
     email_verified = Column(Boolean, nullable=False, default=False)
     email_verification_token = Column(UUID(as_uuid=True), default=uuid.uuid4)

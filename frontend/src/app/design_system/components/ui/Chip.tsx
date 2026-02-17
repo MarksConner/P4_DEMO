@@ -1,33 +1,59 @@
-import type { HTMLAttributes } from 'react';
-import { X } from 'lucide-react';
+import MUIChip from "@mui/material/Chip";
+import type { ChipProps as MUIChipProps } from "@mui/material/Chip";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
+import { X } from "lucide-react";
 
-export interface ChipProps extends HTMLAttributes<HTMLDivElement> {
+export interface ChipProps
+  extends Omit<MUIChipProps, "label" | "variant" | "onDelete" | "color" | "size"> {
   label: string;
   onRemove?: () => void;
-  variant?: 'default' | 'primary';
+  variant?: "default" | "primary";
 }
 
-export function Chip({ label, onRemove, variant = 'default', className = '', ...props }: ChipProps) {
-  const variantStyles = {
-    default: 'bg-secondary text-secondary-foreground',
-    primary: 'bg-primary/10 text-primary',
+const variantSx: Record<NonNullable<ChipProps["variant"]>, SxProps<Theme>> = {
+  default: {
+    bgcolor: "action.hover",
+    color: "text.primary",
+  },
+  primary: {
+    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+    color: (theme) => theme.palette.primary.main,
+  },
+};
+
+export function Chip({
+  label,
+  onRemove,
+  variant = "default",
+  sx,
+  ...props
+}: ChipProps) {
+  const baseSx: SxProps<Theme> = {
+    height: 24,
+    borderRadius: 999,
+    fontSize: "0.75rem",
+    "& .MuiChip-label": {
+      px: 1,
+    },
+    "& .MuiChip-deleteIcon": {
+      color: "inherit",
+      marginRight: 0.25,
+    },
   };
-  
+  const mergedSx = (
+    Array.isArray(sx) ? [baseSx, variantSx[variant], ...sx] : [baseSx, variantSx[variant], sx]
+  ).filter(Boolean) as SxProps<Theme>;
+
   return (
-    <div
-      className={`inline-flex items-center gap-1 h-6 px-2 rounded text-caption ${variantStyles[variant]} ${className}`}
+    <MUIChip
       {...props}
-    >
-      <span>{label}</span>
-      {onRemove && (
-        <button
-          onClick={onRemove}
-          className="hover:opacity-70 transition-opacity"
-          aria-label="Remove"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
-    </div>
+      label={label}
+      size="small"
+      variant="filled"
+      onDelete={onRemove}
+      deleteIcon={onRemove ? <X size={12} /> : undefined}
+      sx={mergedSx}
+    />
   );
 }

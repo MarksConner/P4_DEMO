@@ -1,3 +1,5 @@
+import token
+import bcrypt
 from app.db import SessionLocal
 from app.models.users import Users
 from datetime import datetime, timezone, timedelta
@@ -9,15 +11,16 @@ import jwt
 SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 
-def create_user(session: Session, email: str, username: str, first_name: str, last_name: str,password: str) -> Users:
+def create_user(session: Session, email: str, username: str, first_name: str, last_name: str, password: str) -> Users:
 
     token = uuid.uuid4()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     new_user = Users(
         email=email,
         username=username,
         first_name=first_name,
         last_name=last_name,
-        password = password,
+        password_hash = hashed_password.decode('utf-8'),
         email_verification_token = token,
         email_verification_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5),
         email_verified = False,
@@ -53,7 +56,7 @@ def delete_user_by_email(session: Session, email: str) -> bool:
         print("Deleted user with id:", user_to_delete.user_id,"And email:",user_to_delete.email)
 
 
-# called by frontend verify end point
+# Verify user email using token
 def verify_user_email(session: Session, token) -> bool:
     user = (session.query(Users).filter(Users.email_verification_token == token)).first()
     if not user:
@@ -81,16 +84,23 @@ def get_user_email_by_id(session: Session,user_id: uuid)->str:
         raise ValueError("user not found")        
     return user.email
 
-#Verify email and password exist and match return bool. 
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+#Verify email and password exist and match, return bool. 
 def login_credentials(db: Session, email: str, passsword: str) -> bool:
-    user = (db.query(Users).filter(Users.email == email, Users.password == passsword)).first()
-    
+    user = (db.query(Users).filter(Users.email == email)).first()
+
     if user is None:
         return False
   
+    if not verify_password(passsword, user.password_hash):
+        return False
 
     return True
 
+#Password reset token functions
 def create_reset_token(db: Session, email: str) ->bool:
     user = get_user_by_email(db,email)
     if user is None:
@@ -104,9 +114,13 @@ def create_reset_token(db: Session, email: str) ->bool:
     
 def reset_password_token(db: Session, email:str, token: str, new_password: str) -> bool:
     user = get_user_by_email(db,email)
+    
+    print("incoming token:", token, type(token))
+    print("db token:", user.password_reset_token, type(user.password_reset_token))
+    print("expires:", user.password_reset_expires_at, "now:", datetime.now(timezone.utc))
     if user is None:
         return False
-    if user.password_reset_token != token:
+    if user.password_reset_token !=   token:
         return False
     if user.password_reset_token is None:
         return False
@@ -118,7 +132,8 @@ def reset_password_token(db: Session, email:str, token: str, new_password: str) 
     if now > user.password_reset_expires_at:
         return False
     
-    user.password = new_password
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+    user.password_hash = hashed_password.decode('utf-8')
     user.password_reset_token = None
     user.password_reset_expires_at = None
     user.password_reset_sent_at = None
@@ -134,11 +149,13 @@ def create_access_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+#Login user and return access token based on email and password
 def  login_credentials_user(db, email: str, password: str):
     user = get_user_by_email(db, email)
+
     if not user:
         return None
-    if not user.password  == password:
+    if not verify_password(password, user.password_hash):
         return None
     dictionary: dict
     dictionary = {"email": user.email,"user_id": str(user.user_id)}

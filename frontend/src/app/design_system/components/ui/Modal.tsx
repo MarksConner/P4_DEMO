@@ -1,7 +1,14 @@
-import type { ReactNode, HTMLAttributes, JSX } from "react";
+import type { ReactNode, JSX } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+import type { DialogProps } from "@mui/material/Dialog";
 import { X } from "lucide-react";
 
-export interface ModalProps extends HTMLAttributes<HTMLDivElement> {
+export interface ModalProps extends Omit<DialogProps, "open" | "onClose"> {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -16,39 +23,62 @@ export const Modal = ({
   children,
   footer,
   className = "",
+  PaperProps,
   ...props
-}: ModalProps): JSX.Element | null => {
-  if (!isOpen) return null;
+}: ModalProps): JSX.Element => {
+  const handleClose: DialogProps["onClose"] = () => {
+    onClose();
+  };
+
+  const mergedPaperProps = {
+    ...PaperProps,
+    className: [PaperProps?.className, className].filter(Boolean).join(" ") || undefined,
+    sx: [
+      {
+        width: "100%",
+        maxWidth: 512,
+        maxHeight: "90vh",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: 2,
+      },
+      PaperProps?.sx,
+    ],
+  } satisfies DialogProps["PaperProps"];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      scroll="paper"
+      PaperProps={mergedPaperProps}
+      {...props}
     >
-      <div
-        className={`bg-card rounded-lg shadow-card max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col ${className}`}
-        onClick={(e) => e.stopPropagation()}
-        {...props}
-      >
-        {title && (
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <h2 className="text-h2">{title}</h2>
-            <button
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
-        {footer && (
-          <div className="flex items-center justify-end gap-2 p-6 border-t border-border">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
+      {title && (
+        <DialogTitle sx={{ p: 3, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+            <span>{title}</span>
+            <IconButton onClick={onClose} aria-label="Close">
+              <X size={20} />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+      )}
+      <DialogContent sx={{ p: 3 }}>{children}</DialogContent>
+      {footer && (
+        <DialogActions
+          sx={{
+            p: 3,
+            pt: 0,
+            gap: 1,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            justifyContent: "flex-end",
+          }}
+        >
+          {footer}
+        </DialogActions>
+      )}
+    </Dialog>
   );
 };

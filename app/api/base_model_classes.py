@@ -15,6 +15,7 @@ class UserLogin(BaseModel):
     email: str
     password: str 
 
+
 class UserEmailVerify(BaseModel):
     email: str
 

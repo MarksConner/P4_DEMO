@@ -23,8 +23,6 @@ def get_db():
 def create_user_route(user: UserCreate, db: Session = Depends(get_db)):
     return create_user(db,user.email,user.username,user.first_name,user.last_name,user.password)
 
-
-
 @router.get("/{user_id}/email")
 def get_user_email(user: UUID, db: Session = Depends(get_db)):
     try:
@@ -48,12 +46,14 @@ def login_route(user: UserLogin, db: Session = Depends(get_db)):
     authenticated = login_credentials(db, user.email, user.password)
     if not authenticated:
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    token = create_access_token({"sub": user.email}) # Generate access token
-    db_user = get_user_by_email(db, user.email) # Get user to retrieve user_id
-    return {"access_token": token, "user_id": db_user.user_id,  "token_type": "bearer"}
 
-@router.post("/send_verification_mail")
-async def send_verification_mail(user_data: UserEmailVerify,db: Session = Depends(get_db)):
+    db_user = get_user_by_email(db, user.email)
+    token = create_access_token({"sub": db_user.email, "user_id": str(db_user.user_id)})
+
+    return {"access_token": token, "user_id": db_user.user_id, "token_type": "bearer"}
+
+@router.post("/send_verification_email")
+async def send_verification_email(user_data: UserEmailVerify,db: Session = Depends(get_db)):
     user = get_user_by_email(db, user_data.email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
