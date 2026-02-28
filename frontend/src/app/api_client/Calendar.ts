@@ -1,4 +1,9 @@
+const BASE_API_URL = import.meta.env.VITE_BASE_API_URL;
 import type { CalendarEvent } from "../Types/Calendar";
+
+
+
+
 
 const MOCK_EVENTS: CalendarEvent[] = [
   { id: "1", date: "2025-03-03", title: "Project standup" },
@@ -15,3 +20,4 @@ export async function fetchMonthEvents(
   await new Promise((r) => setTimeout(r, 300)); // fake latency for flow
   return MOCK_EVENTS; // Planned for later: filter by year/month or call backend
 }
+

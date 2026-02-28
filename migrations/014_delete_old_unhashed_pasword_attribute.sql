@@ -1,1 +1,0 @@
-DELETE users.password from users;

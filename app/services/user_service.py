@@ -1,4 +1,3 @@
-import token
 import bcrypt
 from app.db import SessionLocal
 from app.models.users import Users
