@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Button } from "../design_system/components/ui/Button";
 import { Input } from "../design_system/components/ui/Input";
-import ChatClient from "../api_client/Chat";
+import ChatClient from "../api_client/ChatClient";
+import { createContext } from "react";
+
 
 type ChatMessage = {
   id: string;
@@ -24,93 +26,45 @@ const initialMessages: ChatMessage[] = [
 export const AiChatPanel = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
-  const [chatId, setChatId] = useState<string>(
-    () => localStorage.getItem("chat_id") || ""
-  );
-
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!chatId) return;
-
-      const api = new ChatClient();
-      try {
-        const res = await api.getChatHistory(chatId);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return;
-
-        const historyMessages: ChatMessage[] = data.map((m: any) => ({
-          id: m.message_id ?? `m-${Date.now()}-${Math.random()}`,
-          role: m.sender_is ? "user" : "assistant",
-          text: m.content ?? "",
-        }));
-
-        setMessages(historyMessages);
-      } catch {
-      }
-    };
-
-    loadHistory();
-  }, [chatId]);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const chatClient = useMemo(() => new ChatClient(), []); // Memoize ChatClient instance to avoid unnecessary re-instantiations on re-renders
+  
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!draft.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text: draft.trim(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), role: "user", text: trimmed },
+    ]);
     setDraft("");
-    sendMessageToApi(userMessage);
-  };
+    setIsLoading(true);
+    // 
 
-  const sendMessageToApi = async (message: ChatMessage) => {
-    const api = new ChatClient();
+    if(!chatId){ // If no chatId, create a new chat with the first message
+      chatClient.createChatAPI(trimmed).then(async (response) => {
+        if (response.ok) {
+          const data = await response.json();
+          console.log("createChatAPI data:", data);
+          setChatId(data.chat_id); // Store the chatId for future messages
+          // Optionally, you could also add the assistant's response to the messages here if the API returns it
+        } else {
+          // Handle error (e.g., show a notification)
+        }
+        setIsLoading(false);
+      });
+    } else { // If chatId exists, send message to existing chat
+      chatClient.sendMessageAPI(chatId, trimmed).then(async (response) => {
+        if (response.ok) {
+           // Here we could optimistically add the user's message to the chat and then fetch the updated chat history, or we could wait for the response before updating the messages. For simplicity, let's just fetch the updated chat history after sending a message.
+        } else {
+          // Handle error (e.g., show a notification)
+        }
+        setIsLoading(false);
+      });
 
-    try {
-      let currentChatId = chatId;
-
-      if (!currentChatId) {
-        const firstRes = await api.createChat(message.text);
-        if (!firstRes.ok) throw new Error("Failed to start chat");
-
-        const chatIdFromApi: string = await firstRes.json();
-        currentChatId = chatIdFromApi;
-
-        setChatId(chatIdFromApi);
-        localStorage.setItem("chat_id", chatIdFromApi);
-      } else {
-        const sendRes = await api.sendMessage(currentChatId, message.text);
-        if (!sendRes.ok) throw new Error("Failed to send message");
-      }
-
-      const historyRes = await api.getChatHistory(currentChatId);
-      if (!historyRes.ok) throw new Error("Failed to fetch chat history");
-
-      const data = await historyRes.json();
-      const historyMessages: ChatMessage[] = (Array.isArray(data) ? data : []).map(
-        (m: any) => ({
-          id: m.message_id ?? `m-${Date.now()}-${Math.random()}`,
-          role: m.sender_is ? "user" : "assistant",
-          text: m.content ?? "",
-        })
-      );
-
-      if (historyMessages.length > 0) {
-        setMessages(historyMessages);
-      }
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        text: "Sorry, there was an error processing your request.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
@@ -139,9 +93,7 @@ export const AiChatPanel = () => {
               bgcolor:
                 message.role === "user" ? "primary.main" : "background.paper",
               color:
-                message.role === "user"
-                  ? "primary.contrastText"
-                  : "text.primary",
+                message.role === "user" ? "primary.contrastText" : "text.primary",
               border: message.role === "user" ? undefined : "1px solid",
               borderColor: message.role === "user" ? undefined : "divider",
             }}

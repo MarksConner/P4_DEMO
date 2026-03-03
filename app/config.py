@@ -1,16 +1,25 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 from fastapi.security import OAuth2PasswordBearer
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.services.user_service import get_user_by_email
 from app.services.user_service import SECRET_KEY, ALGORITHM
+
+
+# JWT imports 
+import jwt
 import bcrypt
 import psycopg2
+import os # For environment variable access
 
+
+JWT_SECRET = os.getenv("JWT_SECRET", "CHANGE_ME")  # This function as way to set the secret key from an environment variable, with a default for development. We should change this later.
+JWT_ALG = "HS256" # The algorithm used for signing the JWTs. 
+ACCESS_MINUTES = 15 # Access token expiration time in minutes
+REFRESH_DAYS = 14 # Refresh token expiration time in days
 
 #Create auth token on login, We dont use this yet but it's here for better security later on
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")

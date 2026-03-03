@@ -8,20 +8,19 @@ from app.services.messages_service import create_message
 
 
 #Create a chat for a given user when a message is sent. Add the first sentence as title 
-def create_chat(session: Session,  user_id: UUID, content: str) -> Chat:
-    first_sentence = content.split(".")[0]
-    new_chat = Chat(chat_name = first_sentence, user_id=user_id)
+def create_chat_record(session: Session, user_id: UUID, content: str) -> Chat:
+    first_sentence = content.split(".")[0].strip() or "New chat"
+
+    new_chat = Chat(chat_name=first_sentence, user_id=user_id)
     new_chat.created_at = datetime.now(timezone.utc)
     new_chat.updated_at = datetime.now(timezone.utc)
-
     session.add(new_chat)
-    session.flush()
+    session.flush()  
+    first_message = create_message(session, new_chat.chat_id, content, True)
 
-    first_message = create_message(session,new_chat.chat_id,content,True) 
     session.commit()
     session.refresh(new_chat)
     session.refresh(first_message)
-
     return new_chat
 
 #Delete a chat that belongs to a given user

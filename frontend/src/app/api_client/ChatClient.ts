@@ -29,7 +29,7 @@ export default class ChatClient {
     });
   }
 
-  async createChat(content: string): Promise<Response> {
+  async createChatAPI(content: string): Promise<Response> {
     return this.request({
       method: "POST",
       url: "/chats/first_message",
@@ -37,18 +37,18 @@ export default class ChatClient {
     });
   }
 
-  async getChatHistory(chat_id: string): Promise<Response> {
+  async getChatHistoryAPI(chat_id: string): Promise<Response> {
     return this.request({
       method: "GET",
       url: `/chats/get_all_messages_in_chat/${chat_id}`,
     });
   }
 
-  async sendMessage(chat_id: string, content: string): Promise<Response> {
+  async sendMessageAPI(chat_id: string, content: string): Promise<Response> {
     return this.request({
       method: "POST",
       url: "/messages/send_message",
-      body: { chat_id, content },
+      body: { chat_id, content, sender_is: true},
     });
   }
 }

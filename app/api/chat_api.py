@@ -1,7 +1,9 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.base_model_classes import CreateChat, SendMessage, CreateChatOnFirstMessage, MessageResponse
-from app.services.chat_service import create_chat, delete_chat, delete_message_from_chat, get_messages_by_chat_id
+from app.services.chat_service import create_chat_record, delete_chat, delete_message_from_chat, get_messages_by_chat_id
+from app.services.chat_workflows import create_chat_with_first_message
+
 from app.models.users import Users
 from app.config import get_current_user
 from sqlalchemy.orm import Session
@@ -20,11 +22,12 @@ def get_db():
         db.close()
 
 @router.post("/first_message")
-def createChatOnFirstMessage(firstMessage: CreateChatOnFirstMessage, current_user: Users = Depends(get_current_user), db: Session = Depends(get_db)):
-    chat = create_chat(db, current_user.user_id, firstMessage.content)
+def create_chat_on_first_message(firstMessage: CreateChatOnFirstMessage, current_user: Users = Depends(get_current_user), db: Session = Depends(get_db)):
+    chat = create_chat_with_first_message(db, current_user.user_id, firstMessage.content)
+
     if not chat:
         raise HTTPException(status_code=400, details= "chat could not be created")
-    return chat
+    return {"chat_id": chat.chat_id, "chat_name": chat.chat_name, "created_at": chat.created_at}
 
 @router.get("/get_all_messages_in_chat/{chat_id}", response_model=List[MessageResponse])
 def get_all_messages(chat_id: UUID,db: Session = Depends(get_db)):

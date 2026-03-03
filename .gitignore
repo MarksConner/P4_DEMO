@@ -38,22 +38,3 @@ Thumbs.db
 # ---------------------
 *.log
 
-# ---------------------
-# Test / coverage
-# ---------------------
-.coverage
-htmlcov/
-.pytest_cache/
-
-# ---------------------
-# Build artifacts
-# ---------------------
-build/
-dist/
-*.egg-info/
-
-# ---------------------
-# node_modules
-# ---------------------
-node_modules/
-frontend/node_modules/
