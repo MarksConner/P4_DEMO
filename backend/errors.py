@@ -8,7 +8,6 @@ class ConflictError(Exception):
     new_event: Event
     conflicts: List[Event]
 
-    # I generated this format from AI since I am unfamiliar with the OpenAI API for errors
     def __str__(self) -> str:
         conflicts_str = ", ".join(
             f"{e.name}({e.start.isoformat()}–{e.end.isoformat()})"
