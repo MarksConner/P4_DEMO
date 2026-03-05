@@ -1,4 +1,6 @@
 import backend.mapbox as mapbox
+from backend.mapbox import geocode
+from unittest.mock import patch, Mock
 
 
 class DummyResponse:
@@ -35,3 +37,25 @@ def test_geocode_mocks_requests(monkeypatch):
 
     data = mapbox.geocode("Reno")
     assert data["features"][0]["place_name"] == "Reno"
+    
+#Testing a valid address
+def test_geocode_success():
+    mock_response=Mock()
+    mock_response.json.return_value={"features":[{"center": [-119.812804, 39.539467]}]} #Primary address for UNR, 1664 N Virginia St
+    mock_response.raise_for_status.return_value=None
+    
+    with patch("backend.mapbox.requests.get", return_value=mock_response):
+        result=geocode("1664 N Virginia St")
+
+    assert result==("-119.812804,39.539467")
+
+#Testing an invalid address
+def test_geocode_failure():
+    mock_response=Mock()
+    mock_response.json.return_value={"features":[]}
+    mock_response.raise_for_status.return_value=None
+
+    with patch("backend.mapbox.requests.get", return_value=mock_response):
+        result=geocode("123 Fake Address")
+
+    assert result is None
