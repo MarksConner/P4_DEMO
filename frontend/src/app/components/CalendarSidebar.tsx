@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import { useMatch, useResolvedPath, NavLink } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { MiniMonth } from "./MiniMonth";
-import { useCalendar } from "../contexts/CalendarContext";
+import { useCalendar } from "../contexts/useCalendar";
 import { Button } from "../design_system/components/ui/Button";
 
 type CalendarToggle = {

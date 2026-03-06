@@ -12,21 +12,23 @@ import {
 } from "../../design_system/components/ui/Card";
 import { Input } from "../../design_system/components/ui/Input";
 import { Button } from "../../design_system/components/ui/Button";
+import { dataService } from "../../services";
 
 export const CreateUserPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError("Please fill out all fields.");
       return;
     }
@@ -37,9 +39,37 @@ export const CreateUserPage = () => {
     }
 
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const result = await dataService.createUser({
+        firstName,
+        lastName,
+        email,
+        password,
+      });
+
+      if (result?.token) {
+        // If backend returns an auth token on create, start session immediately.
+        localStorage.setItem("authToken", result.token);
+      }
+
+      if (result?.user?.email) {
+        localStorage.setItem("authEmail", result.user.email);
+      }
+
+      // Successful create in mock mode currently returns no token, so
+      // sending them to login keeps behavior predictable.
+      if (result?.token) {
+        navigate("/");
+      } else {
+        navigate("/login");
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to create account. Please try again.";
+      setError(msg);
+    } finally {
       setIsSubmitting(false);
-    }, 300);
+    }
   };
 
   return (
@@ -68,10 +98,18 @@ export const CreateUserPage = () => {
           <CardContent>
             <Stack spacing={2}>
               <Input
-                label="Full name"
-                placeholder="Jane Doe"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                label="First name"
+                placeholder="Jane"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+              />
+              <Input
+                label="Last name"
+                placeholder="Doe"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
               />
               <Input
                 label="Email"

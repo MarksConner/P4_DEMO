@@ -6,7 +6,7 @@ import {
 import { useState, useEffect } from "react";
 import { CalendarMonth } from "./CalendarMonth";
 import type { CalendarEvent } from "../../Types/Calendar";
-import { fetchMonthEvents } from "../../api/calendar";
+import { dataService } from "../../services";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -20,7 +20,7 @@ export const DashboardPage = () => {
     const year = 2025;
     const month = 2; // March, 0-based
 
-    fetchMonthEvents(year, month)
+    dataService.fetchMonthEvents(year, month)
       .then((data) => {
         setEvents(data);
         setIsLoading(false);

@@ -3,8 +3,20 @@ export interface LoginResponse {
   user: {
     id: string;
     email: string;
+    firstName?: string;
+    lastName?: string;
     name?: string;
   };
+}
+
+export interface CreateUserResponse {
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+  token?: string;
 }
 /**
  * Log in API call is handled here, mock data for now. 
@@ -31,7 +43,8 @@ export async function login(
     user: {
       id: "user-1",
       email,
-      name: "Demo User",
+      firstName: "Demo",
+      lastName: "User",
     },
   };
     /*
@@ -52,4 +65,27 @@ export async function login(
 
   return (await res.json()) as LoginResponse;
   */
+}
+
+export async function createUser(
+  email: string,
+  firstName: string,
+  lastName: string,
+  password: string
+): Promise<CreateUserResponse> {
+  // Simulate backend latency for now so UI can exercise loading/error states.
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  if (!email || !firstName || !lastName || !password) {
+    throw new Error("All user fields are required.");
+  }
+
+  return {
+    user: {
+      id: `user-${Date.now()}`,
+      email,
+      firstName,
+      lastName,
+    },
+  };
 }

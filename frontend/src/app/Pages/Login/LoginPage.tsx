@@ -14,7 +14,7 @@ import {
 } from "../../design_system/components/ui/Card";
 import { Button } from "../../design_system/components/ui/Button";
 import { Input } from "../../design_system/components/ui/Input";
-import { login } from "../../api/Auth";
+import { dataService } from "../../services";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export const LoginPage = () => {
 
     setIsLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await dataService.login(email, password);
 
       // For now, store the token in localStorage so other parts of the app
       // (or future auth context) can read it.

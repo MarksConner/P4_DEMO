@@ -13,5 +13,9 @@ export async function fetchMonthEvents(
   month: number
 ): Promise<CalendarEvent[]> {
   await new Promise((r) => setTimeout(r, 300)); // fake latency for flow
-  return MOCK_EVENTS; // Planned for later: filter by year/month or call backend
+  const targetMonth = month + 1;
+  return MOCK_EVENTS.filter((event) => {
+    const [eventYear, eventMonth] = event.date.split("-").map(Number);
+    return eventYear === year && eventMonth === targetMonth;
+  });
 }
