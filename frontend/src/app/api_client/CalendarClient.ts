@@ -82,4 +82,11 @@ export default class CalendarClient {
         });
     }
     
+    async getAllEventsinAdayAPI(calendar_id: string, date: string): Promise<Response> {
+        return this.request({
+            method: "GET",
+            url: `/events/calendar/${calendar_id}/day/${date}`,
+        });
+    }
+    
 }

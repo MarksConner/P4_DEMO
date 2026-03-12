@@ -19,7 +19,13 @@ def create_event(db: Session, calendar_id: UUID, event_name: str, full_address: 
     db.refresh(new_event)
     return new_event
 
-        
+def get_events_for_calendar_day(db: Session, calendar_id: UUID, day: datetime) -> list[Events]:
+    start_of_day = datetime(day.year, day.month, day.day)
+    end_of_day = datetime(day.year, day.month, day.day, 23, 59, 59)
+    events = (db.query(Events).filter(Events.calendar_id == calendar_id).filter(Events.start_time >= start_of_day).filter(Events.start_time <= end_of_day).all())
+    return events
+
+
 
 def update_event(db: Session, event_id: UUID,event_name: str,start_time: datetime, end_time: datetime,priority_rank: int,description: str)->bool:
     event = (db.query(Events).filter(Events.event_id == event_id).one_or_none())

@@ -1,59 +1,80 @@
-
-from app.services import chat_service, messages_service
-from backend.llm_agent import ask_llm
+from datetime import datetime, timedelta
+import uuid
 import json
 
+from sqlalchemy.orm import Session
 
-#This function serves the purpose of removing looping in the chat service when calling create_message function in the create_chat function 
-# (remeber that create_chat calls create_message to add the first message to the chat, and create_message calls create_chat to create a chat if it doesn't exist, which creates a loop).
-    
+from app.services import chat_service, messages_service
+from app.services.calendar_service import get_calendar_context
+from app.services.events_service import create_event
+from backend.llm_agent import ask_llm
+
+
 def create_chat_with_first_message(session, user_id, content):
     chat = chat_service.create_chat_record(session, user_id, content)
-    
     session.commit()
     return chat
-'''
-def generate_llm_response(session, chat_id, user_id, content):
-    llm_output = ask_llm(content, calendar_context=None)
-    if not llm_output:
-        return "The assistant returned an empty response."
+
+
+def handle_chat_message(session: Session, calendar_id: str, message: str):
+    calendar_context = get_calendar_context(session, calendar_id)
+    llm_response_str = ask_llm(message, calendar_context=calendar_context)
+    llm_response = json.loads(llm_response_str)
+
+    intent = llm_response.get("intent")
+    if intent == "add_event":
+        return handle_add_event_intent(session, calendar_id, llm_response)
+
+    return llm_response
+
+
+def handle_add_event_intent(session: Session, calendar_id: str, llm_response: dict):
+    title = llm_response.get("title")
+    start_str = llm_response.get("datetime")
+    duration_minutes = llm_response.get("duration_minutes", 60)
+    location = llm_response.get("location")
+
+    if not title or not start_str:
+        return {
+            "intent": "add_event",
+            "response": "I need a title and time to create the event.",
+            "created": False
+        }
 
     try:
-        info = json.loads(llm_output)
-    except Exception:
-        return "Invalid response from assistant."
+        start_dt = datetime.fromisoformat(start_str)
+    except ValueError:
+        return {
+            "intent": "add_event",
+            "response": "I understood the event, but the time format was invalid.",
+            "created": False
+        }
 
-    intent = info.get("intent", "unknown")
+    try:
+        calendar_uuid = uuid.UUID(calendar_id)
+    except ValueError:
+        return {
+            "intent": "add_event",
+            "response": "Calendar ID is invalid.",
+            "created": False
+        }
 
-    if intent == "add_event":
-        title = info.get("title", "Untitled Event")
-        return f"I will schedule '{title}'."
+    end_dt = start_dt + timedelta(minutes=duration_minutes)
 
-    if intent == "traffic_info":
-        location = info.get("location")
-        return f"I will check traffic to {location}."
-
-    return "I did not understand that."
-
-def send_message_with_ai(session, chat_id, content):
-    user_message = messages_service.create_message(
-        session=session,
-        chat_id=chat_id,
-        content=content,
-        sender_is=True
-    )
-
-    ai_reply = generate_llm_response(session, chat_id, user_id=None, content=content)
-
-    assistant_message = messages_service.create_message(
-        session=session,
-        chat_id=chat_id,
-        content=ai_reply,
-        sender_is=False
+    created_event = create_event(
+        db=session,
+        calendar_id=calendar_uuid,
+        event_name=title,
+        full_address=location or "",
+        start_time=start_dt,
+        end_time=end_dt,
+        description="",
+        priority_rank=0,
     )
 
     return {
-        "user_message": user_message,
-        "assistant_message": assistant_message
+        "intent": "add_event",
+        "response": f"Created event '{title}'.",
+        "created": True,
+        "event_id": str(created_event.event_id)
     }
-'''

@@ -6,6 +6,8 @@ from backend.llm_agent import ask_llm
 from backend.mapbox import get_directions
 from backend.schedule import Schedule
 from backend.errors import ConflictError
+from app.services.calendar_service import get_calendar_context
+
 
 router = APIRouter()
 
@@ -34,7 +36,7 @@ def chat(data: UserMessage):
 
     #ask the LLM
     llm_output = ask_llm(data.message, calendar_context=calendar_context)
-
+    
     if not llm_output:
         return {"error": "LLM returned an empty response"}
 

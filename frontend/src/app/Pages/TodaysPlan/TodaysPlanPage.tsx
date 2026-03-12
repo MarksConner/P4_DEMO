@@ -11,12 +11,12 @@ import { Modal } from "../../design_system/components/ui/Modal";
 import { Input } from "../../design_system/components/ui/Input";
 import { useState, useEffect } from "react";
 import type { DailyTimelineItem } from "../../Types/Calendar";
-import { fetchDayTimeline } from "../../api_client/Today";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCalendar } from "../../contexts/CalendarContext";
+import CalendarClient from "../../api_client/CalendarClient";
 
 export const TodaysPlanPage = () => {
   const navigate = useNavigate();
@@ -30,19 +30,66 @@ export const TodaysPlanPage = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newTime, setNewTime] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [calendarClient] = useState(() => new CalendarClient());
 
-  useEffect(() => {
+  // Helper function to combine selected date with time input so that calendar API can work with add task modal simplified inputs
+  const buildDateTimeFromSelectedDate = (date: Date, time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+
+    const combined = new Date(date);
+    combined.setHours(hours, minutes, 0, 0);
+
+    return combined;
+  };
+
+  const fetchTimeline = async () => {
     setIsLoading(true);
     setError(null);
-    fetchDayTimeline(selectedDate)
-      .then((data) => {
-        setItems(data);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setError("Could not load events for this day.");
-        setIsLoading(false);
-      });
+    console.log("fetchTimeline running");
+    console.log("calendar_id:", localStorage.getItem("calendar_id"));
+    try {
+      const calendar_id = localStorage.getItem("calendar_id");
+      if (!calendar_id) {
+        throw new Error("No calendar selected");
+      }
+
+      const dateString = selectedDate.toISOString().split("T")[0];
+
+      const response = await calendarClient.getAllEventsinAdayAPI(
+        calendar_id,
+        dateString
+      );
+      
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch events");
+      }
+
+      const data = await response.json();
+
+      const timelineItems: DailyTimelineItem[] = data.map((event: any) => ({
+        id: event.event_id,
+        startTime: new Date(event.start_time).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        title: event.event_name,
+        description: event.event_description || undefined,
+        status: "default",
+      }));
+
+      setItems(
+        timelineItems.sort((a, b) => a.startTime.localeCompare(b.startTime))
+      );
+    } catch (err) {
+      setError("Could not load events for this day.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTimeline();
   }, [selectedDate]);
 
   const dateLabel = selectedDate.toLocaleDateString(undefined, {
@@ -50,6 +97,7 @@ export const TodaysPlanPage = () => {
     month: "long",
     day: "numeric",
   });
+
   const isToday =
     selectedDate.toDateString() === new Date().toDateString();
 
@@ -60,29 +108,43 @@ export const TodaysPlanPage = () => {
     setIsAddOpen(true);
   };
 
-  const handleAddTask = () => {
-    if (!newTitle || !newTime) {
-      // in the future we could show a Banner/Toast error
-      return;
+  const handleAddTask = async () => {
+  if (!newTitle || !newTime) {
+    return;
+  }
+
+  try {
+    const calendar_id = localStorage.getItem("calendar_id");
+    if (!calendar_id) {
+      throw new Error("No calendar selected");
     }
 
-    const newItem: DailyTimelineItem = {
-      id: Date.now().toString(),
-      startTime: newTime,
+    const startDateTime = buildDateTimeFromSelectedDate(selectedDate, newTime);
+
+    const endDateTime = new Date(startDateTime);
+    endDateTime.setHours(endDateTime.getHours() + 1);
+
+    const response = await calendarClient.CreateEventAPI({
+      calendar_id,
       title: newTitle,
-      description: newDescription || undefined,
-      status: "default",
-    };
+      description: newDescription || "",
+      start_time: startDateTime.toISOString(),
+      end_time: endDateTime.toISOString(),
+      location: "",
+    });
 
-    setItems((prev) =>
-      [...prev, newItem].sort((a, b) => a.startTime.localeCompare(b.startTime))
-    );
-    setIsAddOpen(false);
+      if (!response.ok) {
+        throw new Error("Failed to create event");
+      }
+
+      setIsAddOpen(false);
+      fetchTimeline();
+    } catch (err) {
+      setError("Could not create event.");
+    }
   };
-
   return (
     <Stack spacing={2} sx={{ maxWidth: 672 }}>
-      {/* Header row */}
       <Box
         sx={{
           display: "flex",
@@ -107,14 +169,12 @@ export const TodaysPlanPage = () => {
         </Button>
       </Box>
 
-      {/* AI insight banner */}
       <Banner
         variant="info"
         title="AI suggestion"
         message="If you leave by 10:35 AM, you’ll arrive on time for your team sync, accounting for traffic and buffer time."
       />
 
-      {/* Timeline card */}
       <Card>
         <CardHeader>
           <Typography variant="h6" fontWeight={600}>
@@ -165,7 +225,6 @@ export const TodaysPlanPage = () => {
         </CardContent>
       </Card>
 
-      {/* Add Task modal */}
       <Modal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}

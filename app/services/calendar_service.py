@@ -86,3 +86,25 @@ def get_event_by_calendar_id(session: Session ,calendar_id: UUID,event_id: UUID)
 def get_calendars_by_user_id(session: Session, user_id: UUID) -> list[Calendar]:
     calendars = session.query(Calendar).filter(Calendar.user_id == user_id).all()
     return calendars
+
+# This function retrieves the context of a calendar, including its events, ordered by start time.
+# Basically it returns a dictionary with a list of events for the calendar, where each event is represented as a dictionary with its details (id, name, start time, end time, location). This context can be used to display the calendar and its events in the frontend.
+# it is returned as a dictionary because the calendar context may include more than just the list of events in the future, such as calendar settings, user preferences, etc. By returning a dictionary, we can easily expand the context to include additional information without changing the structure of the response.
+def get_calendar_context(db: Session, calendar_id: str) -> dict:
+    events = (
+        db.query(Events)
+        .filter(Events.calendar_id == calendar_id)
+        .order_by(Events.start_time.asc())
+        .all()
+    )
+
+    return {"events": [ { 
+        "id": str(event.event_id),
+                "name": event.title,
+                "start": event.start_time.isoformat(),
+                "end": event.end_time.isoformat(),
+                "location": event.location,
+            }
+            for event in events
+        ]
+    }

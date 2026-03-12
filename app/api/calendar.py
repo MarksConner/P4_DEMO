@@ -10,7 +10,6 @@ from app.db import SessionLocal
 from app.services.calendar_service import create_calendar, get_calendars_by_user_id
 from app.services.events_service import create_event
 from app.api.ics_parser import parse_ics
-from tests.test_messages import db 
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 

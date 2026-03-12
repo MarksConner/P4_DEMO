@@ -3,10 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.api.base_model_classes import EventCreate
 from sqlalchemy.orm import Session
 from app.db import SessionLocal
-from app.services.events_service import  create_event,update_event,detect_event_conflicts, add_event_participant, get_event_by_id, remove_event, remove_event_participant
+from app.services.events_service import  create_event, get_events_for_calendar_day,update_event,detect_event_conflicts, add_event_participant, get_event_by_id, remove_event, remove_event_participant
 from datetime import datetime, timezone
 
-from tests.test_messages import db
 
 router = APIRouter(prefix= "/events",tags=["events"])
 
@@ -31,6 +30,12 @@ def create_event_route(event: EventCreate , db: Session = Depends(get_db)):
         event.priority_rank,
     )
     return new_event
+
+@router.get("/calendar/{calendar_id}/day/{day}")
+def get_events_for_calendar_day_route(calendar_id: UUID, day: datetime, db: Session = Depends(get_db)):
+    events = get_events_for_calendar_day(db, calendar_id, day)
+    return events
+
 
 @router.put("/update/{event_id}")
 def update_event_route(event_id: UUID, event: EventCreate, db: Session = Depends(get_db)):
