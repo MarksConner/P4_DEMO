@@ -1,3 +1,4 @@
+from typing import Optional
 from app.db import SessionLocal
 from app.models.calendar import Calendar
 from app.models.events  import Events
@@ -5,7 +6,7 @@ from sqlalchemy import UUID
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-def create_calendar(session: Session, calendar_name: str,user_id: UUID, date_start: datetime, date_end:datetime, icsfile: str)->Calendar:
+def create_calendar(session: Session, calendar_name: str,user_id: UUID, date_start: Optional[datetime] = None, date_end:Optional[datetime] = None, icsfile: Optional[str] = None)->Calendar:
     new_calendar = Calendar(    
     calendar_name=calendar_name, 
     date_start=date_start, 
@@ -82,4 +83,6 @@ def get_event_by_calendar_id(session: Session ,calendar_id: UUID,event_id: UUID)
         raise ValueError("Event not found")
     return event
 
-
+def get_calendars_by_user_id(session: Session, user_id: UUID) -> list[Calendar]:
+    calendars = session.query(Calendar).filter(Calendar.user_id == user_id).all()
+    return calendars

@@ -1,0 +1,2 @@
+ALTER TABLE calendar
+ALTER COLUMN icsfile DROP NOT NULL;

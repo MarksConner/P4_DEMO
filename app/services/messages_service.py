@@ -19,7 +19,7 @@ def get_message_by_id(session: Session, message_id: UUID) -> Messages|None:
 
 #Give chat_id, returns all the messages in a chat (olders messages first).
 def get_messages_by_chat_id(session: Session,chat_id: UUID,) -> list[Messages]:
-    return (session.query(Messages).filter(Messages.chat_id == chat_id).order_by(Messages.sent_at.asc()))
+    return (session.query(Messages).filter(Messages.chat_id == chat_id).order_by(Messages.sent_at.asc()).all())
 
 
 def update_message_content(session: Session,message_id: UUID,user_id: UUID,new_content: str,) -> bool:

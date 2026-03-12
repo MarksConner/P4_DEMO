@@ -53,6 +53,7 @@ def setup_user_chat(db):
     db.refresh(chat)
 
     return user, chat
+
 def test_create_and_get_message_by_id(db, setup_user_chat):
     user, chat = setup_user_chat
 

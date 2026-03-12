@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 from  datetime import datetime
 from uuid import UUID    
@@ -35,23 +37,25 @@ class UserResponse(BaseModel):
     
 #Calendar pydantic operations
 class CalendarCreate(BaseModel):
+    user_id: UUID
     calendar_name: str
+    date_start: Optional[datetime] = None
+    date_end: Optional[datetime] = None
 
 class CalendarRead(CalendarCreate):
     calendar_id: UUID
     updated_at: datetime
     user_id: UUID
 
-#Event pydantic operations
+#Event pydantic class 
 class EventCreate(BaseModel):
     calendar_id: UUID
     event_name: str
-    event_description: str
-    full_address: str
-    priority_rank: int
+    event_description: Optional[str] = None
+    full_address: Optional[str] = None
+    priority_rank: Optional[int] = 0
     start_time: datetime
-    end_time: datetime
-    created_at: datetime
+    end_time: Optional[datetime] = None
 
 
 class EventRead(EventCreate):

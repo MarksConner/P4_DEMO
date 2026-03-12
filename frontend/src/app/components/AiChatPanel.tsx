@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { Button } from "../design_system/components/ui/Button";
 import { Input } from "../design_system/components/ui/Input";
 import ChatClient from "../api_client/ChatClient";
-import { createContext } from "react";
+
 
 
 type ChatMessage = {
@@ -41,7 +41,18 @@ export const AiChatPanel = () => {
     ]);
     setDraft("");
     setIsLoading(true);
-    // 
+
+// Helper function for now to add assistant messages to the chat, we can call this after receiving a response from the API in the future.
+  const addAssistantMessage = (text: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        text,
+      },
+    ]);
+  };
 
     if(!chatId){ // If no chatId, create a new chat with the first message
       chatClient.createChatAPI(trimmed).then(async (response) => {
@@ -49,18 +60,36 @@ export const AiChatPanel = () => {
           const data = await response.json();
           console.log("createChatAPI data:", data);
           setChatId(data.chat_id); // Store the chatId for future messages
-          // Optionally, you could also add the assistant's response to the messages here if the API returns it
+
+
+          const aiResponse = await chatClient.askAI(trimmed); // This is currently not interacting with the database.
+          if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+            console.log("askAI data:", aiData);
+            addAssistantMessage(aiData.response); // Add the AI's response to the chat
+          } else {
+            // Handle error for askAI
+          }
         } else {
-          // Handle error (e.g., show a notification)
+          // Handle error for createChatAPI
         }
         setIsLoading(false);
       });
     } else { // If chatId exists, send message to existing chat
       chatClient.sendMessageAPI(chatId, trimmed).then(async (response) => {
         if (response.ok) {
-           // Here we could optimistically add the user's message to the chat and then fetch the updated chat history, or we could wait for the response before updating the messages. For simplicity, let's just fetch the updated chat history after sending a message.
+          const data = await response.json();
+          console.log("sendMessageAPI data:", data);
+          const aiResponse = await chatClient.askAI(trimmed); // This is currently not interacting with the database.
+          if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+            console.log("askAI data:", aiData);
+            addAssistantMessage(aiData.response); // Add the AI's response to the chat
+          } else {
+            // Handle error for askAI
+          }
         } else {
-          // Handle error (e.g., show a notification)
+          // Handle error for sendMessageAPI
         }
         setIsLoading(false);
       });

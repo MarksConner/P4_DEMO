@@ -51,4 +51,12 @@ export default class ChatClient {
       body: { chat_id, content, sender_is: true},
     });
   }
+  
+  async askAI(message: string): Promise<Response> {
+  return this.request({
+    method: "POST",
+    url: "/chat",
+    body: { message },
+  });
+}
 }

@@ -6,7 +6,8 @@ import {
 import { useState, useEffect } from "react";
 import { CalendarMonth } from "./CalendarMonth";
 import type { CalendarEvent } from "../../Types/Calendar";
-import { fetchMonthEvents } from "../../api_client/calendar";
+import { fetchMonthEvents } from "../../api_client/Calendar";
+
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";

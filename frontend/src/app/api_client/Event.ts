@@ -50,7 +50,7 @@ export default class EventClient {
   async addEvent(payload: AddEventPayload): Promise<Response> {
     return this.request({
       method: "POST",
-      url: "/events",
+      url: "/events/create",
       body: payload,
     });
   }

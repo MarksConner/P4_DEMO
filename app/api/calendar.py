@@ -1,13 +1,16 @@
 from datetime import datetime
+from hashlib import new
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from uuid import UUID 
 from sqlalchemy.orm import Session
 from app.api.base_model_classes import CalendarCreate
+from app.config import get_current_user
 from app.db import SessionLocal
-from app.services.calendar_service import create_calendar
+from app.services.calendar_service import create_calendar, get_calendars_by_user_id
 from app.services.events_service import create_event
-from app.api.ics_parser import parse_ics 
+from app.api.ics_parser import parse_ics
+from tests.test_messages import db 
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 
@@ -22,7 +25,7 @@ def get_db():
 #We need to use Form and File for multipart/form-data since we are uploading a file. we add optional since the only required fields are calendar_name and user_id to identify the user.
 #From(..) = not optional string input from form data
 #File(..) = optional file upload from form data 
-@router.post("/create")
+@router.post("/import-ics")
 async def create_calendar_from_ics( user_id: UUID = Form(...), calendar_name: str = Form(...),               
     date_start: Optional[str] = Form(None),        
     date_end: Optional[str] = Form(None),         
@@ -81,25 +84,12 @@ async def create_calendar_from_ics( user_id: UUID = Form(...), calendar_name: st
 async def get_calendar_by_name():
     pass
 '''
-'''
-def create_calendar(session: Session, calendar_name: str,user_id: UUID, date_start: datetime, date_end:datetime, icsfile: str)->Calendar:
+@router.post("/create")
+def create_calendar_route(calendar: CalendarCreate ,db: Session = Depends(get_db)):
+    new_calendar = create_calendar(db, calendar.calendar_name, calendar.user_id, calendar.date_start, calendar.date_end, icsfile=None)
+    return new_calendar
 
-
-    try:
-        new_calendar = Calendar(    
-        calendar_name=calendar_name, 
-        date_start=date_start, 
-        date_end = date_end, 
-        user_id = user_id,
-        icsfile  = icsfile
-        )
-        session.add(new_calendar)
-        session.commit()
-        session.refresh(new_calendar)
-
-        return new_calendar
-    
-    finally: 
-        session.close()
-
-'''
+@router.get("")
+def get_calendars_by_user_id_route( db: Session = Depends(get_db),  current_user = Depends(get_current_user)):
+    calendars = get_calendars_by_user_id(db, current_user.user_id)
+    return calendars

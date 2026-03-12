@@ -8,7 +8,9 @@ import { useMatch, useResolvedPath, NavLink } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { MiniMonth } from "./MiniMonth";
 import { useCalendar } from "../contexts/CalendarContext";
+import { CreateEventDialog, type CreateCalendarFormData, type CreateEventFormData } from "../components/CreateEventDialog";
 import { Button } from "../design_system/components/ui/Button";
+import CalendarClient from "../api_client/CalendarClient";
 
 type CalendarToggle = {
   id: string;
@@ -59,6 +61,7 @@ const SidebarLink = ({ to, label }: { to: string; label: string }) => {
 
 export const CalendarSidebar = () => {
   const { selectedDate, setSelectedDate } = useCalendar();
+  const [isCreateOpen, setIsCreateOpen] = useState(false); // State to control the visibility of the CreateEventDialog
   const [enabledCalendars, setEnabledCalendars] = useState(() =>
     new Set(calendarToggles.map((calendar) => calendar.id))
   );
@@ -74,6 +77,30 @@ export const CalendarSidebar = () => {
       return next;
     });
   };
+const handleCreateEvent = async (eventData: CreateEventFormData) => {
+  const calendarClient = new CalendarClient();
+const response = await calendarClient.CreateEventAPI(eventData);
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(body?.detail || body?.message || "Failed to create event");
+  }
+};
+
+  
+const handleCreateCalendar = async (calendarData: CreateCalendarFormData) => {
+  const calendarClient = new CalendarClient();
+  const user_id = localStorage.getItem("user_id");
+  if (!user_id) {
+    throw new Error("User ID not found");
+  }
+  const response = await calendarClient.createCalendarAPI(calendarData.name, undefined, undefined); // We can modify this to include date_start and date_end if needed
+  const body = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(body?.detail || body?.message || "Failed to create calendar");
+  }
+};
+
 
   return (
     <Box
@@ -94,9 +121,16 @@ export const CalendarSidebar = () => {
         size="md"
         variant="primary"
         startIcon={<Plus size={16} />}
+        onClick={() => setIsCreateOpen(true)}
       >
         Create
       </Button>
+      <CreateEventDialog
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSubmitCalendar={handleCreateCalendar}
+        onSubmitEvent={handleCreateEvent}
+      />
 
       <MiniMonth selectedDate={selectedDate} onSelectDate={setSelectedDate} />
 
