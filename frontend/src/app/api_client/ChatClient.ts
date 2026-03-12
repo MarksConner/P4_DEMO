@@ -52,11 +52,11 @@ export default class ChatClient {
     });
   }
   
-  async askAI(message: string): Promise<Response> {
+  async askAI(message: string, calendar_id: string): Promise<Response> {
   return this.request({
     method: "POST",
     url: "/chat",
-    body: { message },
+    body: { message, calendar_id},
   });
 }
 }

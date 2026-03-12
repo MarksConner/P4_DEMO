@@ -61,8 +61,15 @@ export const AiChatPanel = () => {
           console.log("createChatAPI data:", data);
           setChatId(data.chat_id); // Store the chatId for future messages
 
-
-          const aiResponse = await chatClient.askAI(trimmed); // This is currently not interacting with the database.
+          const calendarId = localStorage.getItem("calendar_id");
+          // Null check.
+          if (!calendarId) {
+            addAssistantMessage("No calendar selected.");
+            setIsLoading(false);
+            return;
+          }
+          const aiResponse = await chatClient.askAI(trimmed, calendarId);
+          
           if (aiResponse.ok) {
             const aiData = await aiResponse.json();
             console.log("askAI data:", aiData);
@@ -80,7 +87,15 @@ export const AiChatPanel = () => {
         if (response.ok) {
           const data = await response.json();
           console.log("sendMessageAPI data:", data);
-          const aiResponse = await chatClient.askAI(trimmed); // This is currently not interacting with the database.
+           const calendarId = localStorage.getItem("calendar_id");
+          // Null check.-- Duplicated code probably could refactor
+          if (!calendarId) {
+            addAssistantMessage("No calendar selected.");
+            setIsLoading(false);
+            return;
+          }
+          //--------------------
+          const aiResponse = await chatClient.askAI(trimmed, calendarId); // This is currently not interacting with the database.
           if (aiResponse.ok) {
             const aiData = await aiResponse.json();
             console.log("askAI data:", aiData);
