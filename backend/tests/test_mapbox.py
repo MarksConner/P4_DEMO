@@ -28,15 +28,19 @@ def test_get_directions_mocks_requests(monkeypatch):
 
 
 def test_geocode_mocks_requests(monkeypatch):
-    def fake_get(url, timeout=20):
+    def fake_get(url, params=None, timeout=20):
         assert "geocoding" in url
-        return DummyResponse({"features": [{"place_name": "Reno"}]})
+        return DummyResponse({
+            "features": [
+                {"center": [-119.8138, 39.5296]}
+            ]
+        })
 
     monkeypatch.setattr(mapbox.requests, "get", fake_get)
     monkeypatch.setattr(mapbox, "MAPBOX_TOKEN", "fake-token")
 
-    data = mapbox.geocode("Reno")
-    assert data["features"][0]["place_name"] == "Reno"
+    result = mapbox.geocode("Reno")
+    assert result == "-119.8138,39.5296"
     
 #Testing a valid address
 def test_geocode_success():
